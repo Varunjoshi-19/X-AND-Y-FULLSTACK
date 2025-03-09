@@ -1,37 +1,44 @@
-import express from "express";
+import express, { Request } from "express";
 import dotenv from "dotenv";
-import { ApolloServer } from "@apollo/server";
-import { expressMiddleware } from "@apollo/server/express4";
 import bodyParser from "body-parser";
-import { typeDefs , resolvers } from "./schema";
-
+import { UserService } from "./services/user-service";
+import { expressMiddleware } from "@apollo/server/express4";
+import createGraphQLServer from "./graphql/graphql-server";
 dotenv.config();
 
 const app = express();
 const port = Number(process.env.PORT) || 8000;
 
-// CREATING GARPHQL SERVER
 
-const server = new ApolloServer({
-    typeDefs: typeDefs,
-    resolvers: resolvers
-})
-
-async function GraphQLServer() {
+async function StartingServer() {
 
 
     app.use(bodyParser.json());
     app.use(express.json());
     app.use(express.urlencoded({ extended: true }));
 
-    await server.start();
-
 
     app.get("/", (req, res) => {
         res.json({ message: "server is up and running !" })
     })
 
-    app.use("/graphql", expressMiddleware(server) as any);
+    app.use("/graphql", expressMiddleware(await createGraphQLServer(), {
+
+        context: async ({ req }: { req: Request }) => {
+
+            const token = req.headers["token"];
+
+            if (!token) return {};   // return nothing empty { }
+
+            const user = UserService.AuthorizationUser(token as string);
+
+            return { user };    // [ must be enclosed inside this {} other wise you will face an error ] 
+
+        }
+
+    } as any) as any);
+
+
 
     app.listen(port, () => {
         console.log(`Server is running on port ${port}`);
@@ -39,6 +46,6 @@ async function GraphQLServer() {
 
 };
 
-GraphQLServer();
+StartingServer();
 
 
