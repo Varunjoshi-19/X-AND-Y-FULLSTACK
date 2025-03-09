@@ -1,0 +1,11 @@
+####
+POST http://localhost:5000/addUser
+Content-Type:  application/json 
+
+{
+     "name" : "user agent",
+     "username" : "User-Agent12",
+     "website" : "coderhacker",
+     "email" : "hacking@gmail.com",
+     "phoneNo"  : 1091314098
+}
